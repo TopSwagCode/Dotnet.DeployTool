@@ -19,8 +19,7 @@ namespace Dotnet.DeployTool.CLI
 
 
 
-            var test = PingHost("34.255.4.203", 22);
-
+            
             /*
 
                Console.WriteLine("");
