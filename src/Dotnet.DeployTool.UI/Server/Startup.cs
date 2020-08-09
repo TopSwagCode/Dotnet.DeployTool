@@ -6,6 +6,7 @@ using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
 using System.Linq;
+using Dotnet.DeployTool.UI.Server.Hubs;
 
 namespace Dotnet.DeployTool.UI.Server
 {
@@ -25,6 +26,8 @@ namespace Dotnet.DeployTool.UI.Server
 
             services.AddControllersWithViews();
             services.AddRazorPages();
+
+            services.AddSignalR();
         }
 
         // This method gets called by the runtime. Use this method to configure the HTTP request pipeline.
@@ -52,6 +55,7 @@ namespace Dotnet.DeployTool.UI.Server
             {
                 endpoints.MapRazorPages();
                 endpoints.MapControllers();
+                endpoints.MapHub<ChatHub>("/chathub");
                 endpoints.MapFallbackToFile("index.html");
             });
         }
