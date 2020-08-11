@@ -1,4 +1,5 @@
 ﻿@inherits LayoutComponentBase
+@inject NavigationManager NavigationManager
 
 <div class="sidebar">
     <NavMenu />
@@ -13,3 +14,23 @@
         @Body
     </div>
 </div>
+
+<style>
+    .app-fab--absolute {
+        position: fixed;
+        bottom: 1rem;
+        right: 1rem;
+    }
+</style>
+
+<MatFAB Class="app-fab--absolute" Icon="@MatIconNames.Star" Label="Star on github" OnClick="@(_ => StarOnGithub())"></MatFAB>
+
+@code
+        {
+
+    void StarOnGithub()
+    {
+        NavigationManager.NavigateTo("https://github.com/TopSwagCode/Dotnet.DeployTool");
+    }
+
+}

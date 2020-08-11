@@ -9,6 +9,7 @@
   </ItemGroup>
 
   <ItemGroup>
+    <ProjectReference Include="..\..\Dotnet.DeployTool.Core\Dotnet.DeployTool.Core.csproj" />
     <ProjectReference Include="..\Client\Dotnet.DeployTool.UI.Client.csproj" />
     <ProjectReference Include="..\Shared\Dotnet.DeployTool.UI.Shared.csproj" />
   </ItemGroup>

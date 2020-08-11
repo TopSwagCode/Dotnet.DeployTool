@@ -74,6 +74,7 @@ namespace Dotnet.DeployTool.Core
 
             if (hasError)
             {
+                await _feedbackChannel.SendFeedback($" - - - - Failed to make connection - - - -");
                 return;
             }
 

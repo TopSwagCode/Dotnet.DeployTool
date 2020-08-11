@@ -1,4 +1,5 @@
 ﻿using Dotnet.DeployTool.UI.Shared;
+using Dotnet.DeployTool.UI.Shared.Deploy;
 using Microsoft.AspNetCore.SignalR;
 using System;
 using System.Collections.Generic;

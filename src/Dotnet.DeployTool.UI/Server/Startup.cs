@@ -7,6 +7,8 @@ using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
 using System.Linq;
 using Dotnet.DeployTool.UI.Server.Hubs;
+using Dotnet.DeployTool.Core;
+using Dotnet.DeployTool.WebClient;
 
 namespace Dotnet.DeployTool.UI.Server
 {
@@ -28,6 +30,12 @@ namespace Dotnet.DeployTool.UI.Server
             services.AddRazorPages();
 
             services.AddSignalR();
+
+            services.AddSingleton(new DeployServiceConfiguration(null,"",22,""));
+            services.AddTransient<IFeedbackChannel, SignalRFeedbackChannel>();
+            services.AddSingleton<IScriptManager, ScriptManager>();
+            services.AddTransient<IFeedbackChannel, SignalRFeedbackChannel>();
+            services.AddTransient<IDeployService, DeployService>();
         }
 
         // This method gets called by the runtime. Use this method to configure the HTTP request pipeline.
@@ -56,6 +64,7 @@ namespace Dotnet.DeployTool.UI.Server
                 endpoints.MapRazorPages();
                 endpoints.MapControllers();
                 endpoints.MapHub<ChatHub>("/chathub");
+                endpoints.MapHub<DeployHub>("/deployhub");
                 endpoints.MapFallbackToFile("index.html");
             });
         }

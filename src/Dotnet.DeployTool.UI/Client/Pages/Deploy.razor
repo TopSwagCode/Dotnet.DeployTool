@@ -1,0 +1,108 @@
+﻿@using Dotnet.DeployTool.UI.Shared.Deploy 
+@page "/deploy"
+@inject NavigationManager navigationManager
+
+    <div>
+        <style>
+            .mat-tab-group-content {
+                height: 350px;
+                margin-top: 25px;
+            }
+        </style>
+        <h1 style=" text-align: center; ">Deploy tool</h1>
+        <MatTabGroup Style="margin-left: auto; margin-right: auto; display: block; width:800px">
+            <MatTab Label="Server">
+                <p>
+                    <MatTextField @bind-Value="@_ip" Label="Ip" Style="width:645px"></MatTextField>
+                    <MatNumericUpDownField Label="Port"
+                                           @bind-Value=@_port
+                                           DecimalPlaces=0
+                                           Minimum=1 Maximum=65535
+                                           Style="width:150px">
+                    </MatNumericUpDownField>
+                </p>
+                <p>
+                    <MatTextField @bind-Value="@_username" Label="Username" Style="width:800px"></MatTextField>
+                </p>
+                <p>
+                    <MatTextField @bind-Value="@_pemKeyFilePath" Label="Pem key file path" Style="width: 800px"></MatTextField>
+                </p>
+                <p>
+                    <MatButton Raised="true" @onclick="TestConnectionAsync" Style="float:right">Test connection</MatButton>
+                </p>
+            </MatTab>
+            <MatTab Label="Os/Runtime">
+            </MatTab>
+            <MatTab Label="Release">
+            </MatTab>
+            <MatTab Label="Deploy">
+            </MatTab>
+
+        </MatTabGroup>
+
+        <MatDivider Style="margin-left: auto; margin-right: auto; display: block; width:800px"></MatDivider>
+
+        <textarea @bind="@_feedbackText" style="background-color: black;color: green; width: 800px; height: 600px; margin-top:25px; margin-left: auto; margin-right: auto; display: block; width:800px"></textarea>
+    </div>
+
+@code  {
+
+    DeployClient client = null;
+
+    string _ip;
+    int _port;
+    string _username;
+    string _pemKeyFilePath;
+    string _feedbackText;
+
+    // list of messages in chat
+    List<string> feedbackList = new List<string>();
+
+    protected override async Task OnInitializedAsync()
+    {
+        // remove old feedback if any
+        feedbackList.Clear();
+        feedbackList = new List<string>() { };
+
+        _feedbackText = string.Join("\n", feedbackList);
+
+        // Create the Deploy client
+        string baseUrl = navigationManager.BaseUri;
+        client = new DeployClient(baseUrl);
+
+        // add an event handler for incoming messages
+        client.FeedbackReceived += FeedbackReceived;
+
+        await client.StartAsync();
+
+    }
+
+    /// <summary>
+    /// Inbound feedback
+    /// </summary>
+    /// <param name="sender"></param>
+    /// <param name="e"></param>
+    void FeedbackReceived(object sender, FeedbackReceivedEventArgs e)
+    {
+        //Console.WriteLine($"Blazor: receive {e.Feedback}");
+
+        feedbackList.Add(e.Feedback);
+        _feedbackText = string.Join("\n", feedbackList);
+
+        // Inform blazor the UI needs updating
+        StateHasChanged();
+    }
+
+    async Task DisconnectAsync()
+    {
+        await client.StopAsync();
+        client = null;
+    }
+
+    private async Task TestConnectionAsync()
+    {
+        // TODO: perhaps validate input?
+        await client.UpdateConfigAndTestConnection(_pemKeyFilePath, _ip, _port.ToString(), _username);
+    }
+
+}

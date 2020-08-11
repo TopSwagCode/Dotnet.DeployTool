@@ -1,8 +1,9 @@
 ﻿using Dotnet.DeployTool.Core;
 using Microsoft.AspNetCore.SignalR;
+using System;
 using System.Threading.Tasks;
 
-namespace Dotnet.DeployTool.WebClient.Hubs
+namespace Dotnet.DeployTool.UI.Server.Hubs
 {
     public class DeployHub : Hub
     {
@@ -10,7 +11,7 @@ namespace Dotnet.DeployTool.WebClient.Hubs
 
         public DeployHub(IDeployService deployService)
         {
-            this._deployService = deployService;
+            _deployService = deployService;
         }
 
         public async Task UpdateConfigAndTestConnection(string pemFilePath, string ip, string port, string username)
@@ -26,6 +27,16 @@ namespace Dotnet.DeployTool.WebClient.Hubs
         public async Task UploadSolution(string projectPath)
         {
             await _deployService.UploadSolution(projectPath);
+        }
+
+        public override Task OnConnectedAsync()
+        {
+            return base.OnConnectedAsync();
+        }
+
+        public override Task OnDisconnectedAsync(Exception exception)
+        {
+            return base.OnDisconnectedAsync(exception);
         }
     }
 }

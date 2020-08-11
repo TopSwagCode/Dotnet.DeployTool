@@ -1,5 +1,5 @@
 ﻿using Dotnet.DeployTool.Core;
-using Dotnet.DeployTool.WebClient.Hubs;
+using Dotnet.DeployTool.UI.Server.Hubs;
 using Microsoft.AspNetCore.SignalR;
 using System;
 using System.Collections.Generic;
