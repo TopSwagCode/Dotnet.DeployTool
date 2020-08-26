@@ -12,8 +12,6 @@ namespace Dotnet.DeployTool.CLI
     class Program
     {
 
-        static string ip = "54.229.153.219";
-
         static async Task Main(string[] args)
         {
             Console.WriteLine("HelloWorld");
@@ -47,30 +45,7 @@ namespace Dotnet.DeployTool.CLI
             sudo journalctl -fu kestrel-helloapp.service to view logs
              */
 
-
-
-            /*
-
-               Console.WriteLine("");
-
-               UploadSolution();
-
-               Console.WriteLine("");
-
-               await InstallDotnetCore3_1();
-
-               Console.WriteLine("");
-
-               await RunSampleApp();
-
-               Console.WriteLine("DONE!");
-
-               Console.ReadLine();
-             */
         }
-
-
-
 
         // TODO: Create service definition, eg. the one from Docker-Compose project and use that to startup AspnetCore
 
@@ -79,5 +54,4 @@ namespace Dotnet.DeployTool.CLI
 
     }
 
-    
 }

@@ -23,5 +23,7 @@
         public const string Feedback = "Feedback";
 
         public const string PublishApp = "PublishApp";
+
+        public static string SetupService = "SetupService";
     }
 }

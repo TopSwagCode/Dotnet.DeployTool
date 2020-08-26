@@ -264,7 +264,7 @@ namespace Dotnet.DeployTool.Core
             var isSelfContained = false;
             var osRuntime = "linux-x64";
             var output = Environment.GetFolderPath(Environment.SpecialFolder.UserProfile) + $"/.deploy/{appName}";
-            var script = $"publish {pathToCsproj} --configuration {configuration} --framework {framework.From()} --self-contained {isSelfContained.ToString().ToLower()} --runtime {osRuntime} --output {output}";
+            var script = $"publish {pathToCsproj} --configuration {configuration} --framework {framework.From()} --self-contained {isSelfContained.ToString().ToLower()} --runtime {osRuntime} --output {output}"; // --verbosity quiet
 
             _feedbackChannel.SendFeedback($"dotnet ${script}");
 
@@ -274,6 +274,24 @@ namespace Dotnet.DeployTool.Core
 
             _feedbackChannel.SendFeedback($"- - - - Publishing completed for App: {appName} - - - -");
             return Task.CompletedTask;
+        }
+
+        public Task SetupService(string pemFilePath, string ip, int port, string username, string projectName)
+        {
+
+            var serviceFilePath = Environment.GetFolderPath(Environment.SpecialFolder.UserProfile) + $"/.deploy/{projectName}/{projectName.ToLower()}.service";
+
+            File.Copy("description.service", serviceFilePath);
+
+            /*
+             * TODO:
+             *  Change variables in service file
+             *  Upload it to Server
+             *  Setup Service
+             *  Start Service
+             */
+
+            throw new NotImplementedException();
         }
     }
 

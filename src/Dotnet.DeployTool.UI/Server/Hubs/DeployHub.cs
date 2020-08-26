@@ -29,6 +29,11 @@ namespace Dotnet.DeployTool.UI.Server.Hubs
             await _deployService.UploadSolution(pemFilePath, ip, port, username, projectName);
         }
 
+        public async Task SetupService(string pemFilePath, string ip, int port, string username, string projectName)
+        {
+            await _deployService.SetupService(pemFilePath, ip, port, username, projectName);
+        }
+
         public async Task PublishApp(string pathToCsproj, string appName, int appRuntime)
         {
             await _deployService.PublishApp(pathToCsproj, appName, (AppRuntimeVersion)appRuntime);

@@ -173,4 +173,9 @@
         await client.UploadSolution(_pemKeyFilePath, _ip, _port, _username, _projectName);
     }
 
+    private async Task SetupService()
+    {
+        await client.SetupService(_pemKeyFilePath, _ip, _port, _username, _projectName);
+    }
+
 }

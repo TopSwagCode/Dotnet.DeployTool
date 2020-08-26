@@ -9,5 +9,6 @@ namespace Dotnet.DeployTool.Core
         Task RunSampleAppAsync();
         Task PublishApp(string pathToCsproj, string appName, AppRuntimeVersion appRuntime);
         Task UploadSolution(string pemFilePath, string ip, int port, string username, string projectName);
+        Task SetupService(string pemFilePath, string ip, int port, string username, string projectName);
     }
 }
