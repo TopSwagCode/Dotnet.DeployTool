@@ -5,8 +5,9 @@ namespace Dotnet.DeployTool.Core
     public interface IDeployService
     {
         Task UpdateConfigAndTestConnection(string pemFilePath, string ip, int port, string username);
-        Task InstallAppRuntimeAsync(OsVersion osVersion, AppRuntimeVersion appRuntimeVersion);
+        Task InstallAppRuntimeAsync(string pemFilePath, string ip, int port, string username, OsVersion osVersion, AppRuntimeVersion appRuntimeVersion);
         Task RunSampleAppAsync();
-        Task UploadSolution(string releaseFolderPath);
+        Task PublishApp(string pathToCsproj, string appName, AppRuntimeVersion appRuntime);
+        Task UploadSolution(string pemFilePath, string ip, int port, string username, string projectName);
     }
 }

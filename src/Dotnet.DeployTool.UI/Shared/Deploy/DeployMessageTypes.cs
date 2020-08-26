@@ -22,5 +22,6 @@
         /// </summary>
         public const string Feedback = "Feedback";
 
+        public const string PublishApp = "PublishApp";
     }
 }

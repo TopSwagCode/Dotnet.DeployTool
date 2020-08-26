@@ -1,12 +1,21 @@
 ﻿@using Dotnet.DeployTool.UI.Shared.Deploy 
 @page "/deploy"
 @inject NavigationManager navigationManager
+@inject IJSRuntime jsRuntime
 
     <div>
         <style>
             .mat-tab-group-content {
                 height: 350px;
                 margin-top: 25px;
+            }
+
+            .mdc-select__anchor {
+                width: 800px;
+            }
+
+            .mdc-list {
+                width: 800px;
             }
         </style>
         <h1 style=" text-align: center; ">Deploy tool</h1>
@@ -28,32 +37,73 @@
                     <MatTextField @bind-Value="@_pemKeyFilePath" Label="Pem key file path" Style="width: 800px"></MatTextField>
                 </p>
                 <p>
-                    <MatButton Raised="true" @onclick="TestConnectionAsync" Style="float:right">Test connection</MatButton>
+                    <MatButton Raised="true" @onclick="TestConnectionAsync">Test connection</MatButton>
                 </p>
             </MatTab>
             <MatTab Label="Os/Runtime">
+                <p>
+                    <MatSelect Label="Pick a Food Group" @bind-Value="@_osVersion" Style="width:800px">
+                        <MatOption TValue="int" Value="0">Ubuntu 20.4 LTS</MatOption>
+                        <MatOption TValue="int" Value="1">Ubuntu 18.4 LTS</MatOption>
+                        <MatOption TValue="int" Value="2">Ubuntu 16.4 LTS</MatOption>
+                    </MatSelect>
+                </p>
+                <p>
+                    <MatSelect Label="Pick a Food Group" @bind-Value="@_appRuntimeVersion" Style="width:800px">
+                        <MatOption TValue="int" Value="0">Dotnet Core 2.1 LTS</MatOption>
+                        <MatOption TValue="int" Value="1">Dotnet Core 3.1 LTS</MatOption>
+                    </MatSelect>
+                </p>
+                <p>
+                    <MatButton Raised="true" @onclick="InstallRuntime">Install runtime</MatButton>
+                </p>
             </MatTab>
-            <MatTab Label="Release">
+            <MatTab Label="Publish">
+                <p>
+                    <MatTextField @bind-Value="@_csprojFilePath" Label="Path to csproj" Style="width: 800px"></MatTextField>
+                </p>
+                <p>
+                    <MatTextField @bind-Value="@_projectName" Label="Project name" Style="width: 800px"></MatTextField>
+                </p>
+                <p>
+                    <MatButton Raised="true" @onclick="PublishApp">Publish</MatButton>
+                    <MatButton Raised="true" @onclick="UploadSolution">Upload solution and test connection</MatButton>
+                </p>
             </MatTab>
-            <MatTab Label="Deploy">
+            <MatTab Label="Run">
+                <p>
+                    <MatTextField @bind-Value="@_pemKeyFilePath" Label="Locale release filepath" Style="width: 800px"></MatTextField>
+                </p>
+                <p>
+                    <MatTextField @bind-Value="@_pemKeyFilePath" Label="Remote upload filepath" Style="width: 800px"></MatTextField>
+                </p>
+                <p>
+                    <MatButton Raised="true" @onclick="TestConnectionAsync">Setup Service</MatButton>
+                </p>
             </MatTab>
 
         </MatTabGroup>
 
         <MatDivider Style="margin-left: auto; margin-right: auto; display: block; width:800px"></MatDivider>
 
-        <textarea @bind="@_feedbackText" style="background-color: black;color: green; width: 800px; height: 600px; margin-top:25px; margin-left: auto; margin-right: auto; display: block; width:800px"></textarea>
+        <textarea id="feedback" spellcheck="false" @bind="@_feedbackText" style="background-color: black;color: green; width: 800px; height: 600px; margin-top:25px; margin-left: auto; margin-right: auto; display: block; width:800px;"></textarea>
     </div>
 
 @code  {
 
     DeployClient client = null;
 
-    string _ip;
-    int _port;
-    string _username;
-    string _pemKeyFilePath;
+    string _ip = "54.155.2.29"; // TODO: Remove hardcoded value
+    int _port = 22;
+    string _username = "ubuntu";
+    string _pemKeyFilePath = @"C:\deploytool\default.pem";
     string _feedbackText;
+
+    int _osVersion = 1;
+    int _appRuntimeVersion = 1;
+
+    string _csprojFilePath = @"C:\git\TopSwagCode.Blog.Api\Blog.Api\Blog.Api.csproj";
+    string _projectName = @"BlogApi";
 
     // list of messages in chat
     List<string> feedbackList = new List<string>();
@@ -91,6 +141,9 @@
 
         // Inform blazor the UI needs updating
         StateHasChanged();
+
+        // Used to scroll to bottom of TextArea
+        jsRuntime.InvokeVoidAsync("eval", @"(function(){ var textarea = document.getElementById('feedback'); textarea.scrollTop = textarea.scrollHeight; })()").GetAwaiter().GetResult();
     }
 
     async Task DisconnectAsync()
@@ -102,7 +155,22 @@
     private async Task TestConnectionAsync()
     {
         // TODO: perhaps validate input?
-        await client.UpdateConfigAndTestConnection(_pemKeyFilePath, _ip, _port.ToString(), _username);
+        await client.UpdateConfigAndTestConnection(_pemKeyFilePath, _ip, _port, _username);
+    }
+
+    private async Task InstallRuntime()
+    {
+        await client.InstallAppRuntime(_pemKeyFilePath, _ip, _port, _username, _osVersion, _appRuntimeVersion);
+    }
+
+    private async Task PublishApp()
+    {
+        await client.PublishApp(_csprojFilePath, _projectName, _appRuntimeVersion);
+    }
+
+    private async Task UploadSolution()
+    {
+        await client.UploadSolution(_pemKeyFilePath, _ip, _port, _username, _projectName);
     }
 
 }

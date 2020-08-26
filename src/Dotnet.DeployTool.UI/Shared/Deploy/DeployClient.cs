@@ -78,18 +78,28 @@ namespace Dotnet.DeployTool.UI.Shared.Deploy
         /// </remarks>
         public event FeedbackReceivedEventHandler FeedbackReceived;
 
-        /// <summary>
-        /// Send a message to the hub
-        /// </summary>
-        /// <param name="message">message to send</param>
-        public async Task UpdateConfigAndTestConnection(string pemFilePath, string ip, string port, string username)
+
+        public async Task UpdateConfigAndTestConnection(string pemFilePath, string ip, int port, string username)
         {
             await _hubConnection.SendAsync(DeployMessageTypes.UpdateConfigAndTestConnection, pemFilePath, ip, port, username);
         }
 
-        /// <summary>
-        /// Stop the client (if started)
-        /// </summary>
+
+        public async Task InstallAppRuntime(string pemFilePath, string ip, int port, string username, int osVersion, int appRuntimeVersion)
+        {
+            await _hubConnection.SendAsync(DeployMessageTypes.InstallAppRuntime, pemFilePath, ip, port, username, osVersion, appRuntimeVersion);
+        }
+
+        public async Task PublishApp(string pathToCsproj, string appName, int appRuntime)
+        {
+            await _hubConnection.SendAsync(DeployMessageTypes.PublishApp, pathToCsproj, appName, appRuntime);
+        }
+
+        public async Task UploadSolution(string pemFilePath, string ip, int port, string username, string projectName)
+        {
+            await _hubConnection.SendAsync(DeployMessageTypes.UploadSolution, pemFilePath, ip, port, username, projectName);
+        }
+
         public async Task StopAsync()
         {
 

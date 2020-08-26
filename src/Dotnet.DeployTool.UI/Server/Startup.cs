@@ -31,7 +31,7 @@ namespace Dotnet.DeployTool.UI.Server
 
             services.AddSignalR();
 
-            services.AddSingleton(new DeployServiceConfiguration(null,"",22,""));
+
             services.AddTransient<IFeedbackChannel, SignalRFeedbackChannel>();
             services.AddSingleton<IScriptManager, ScriptManager>();
             services.AddTransient<IFeedbackChannel, SignalRFeedbackChannel>();
@@ -63,7 +63,6 @@ namespace Dotnet.DeployTool.UI.Server
             {
                 endpoints.MapRazorPages();
                 endpoints.MapControllers();
-                endpoints.MapHub<ChatHub>("/chathub");
                 endpoints.MapHub<DeployHub>("/deployhub");
                 endpoints.MapFallbackToFile("index.html");
             });

@@ -14,19 +14,24 @@ namespace Dotnet.DeployTool.UI.Server.Hubs
             _deployService = deployService;
         }
 
-        public async Task UpdateConfigAndTestConnection(string pemFilePath, string ip, string port, string username)
+        public async Task UpdateConfigAndTestConnection(string pemFilePath, string ip, int port, string username)
         {
-            await _deployService.UpdateConfigAndTestConnection(pemFilePath, ip, int.Parse(port), username);
+            await _deployService.UpdateConfigAndTestConnection(pemFilePath, ip, port, username);
         }
 
-        public async Task InstallAppRuntime(string osVersion, string appRuntimeVersion)
+        public async Task InstallAppRuntime(string pemFilePath, string ip, int port, string username, int osVersion, int appRuntimeVersion)
         {
-            await _deployService.InstallAppRuntimeAsync((OsVersion)int.Parse(osVersion), (AppRuntimeVersion)int.Parse(appRuntimeVersion));
+            await _deployService.InstallAppRuntimeAsync(pemFilePath, ip, port, username, (OsVersion)osVersion, (AppRuntimeVersion)appRuntimeVersion);
         }
 
-        public async Task UploadSolution(string projectPath)
+        public async Task UploadSolution(string pemFilePath, string ip, int port, string username, string projectName)
         {
-            await _deployService.UploadSolution(projectPath);
+            await _deployService.UploadSolution(pemFilePath, ip, port, username, projectName);
+        }
+
+        public async Task PublishApp(string pathToCsproj, string appName, int appRuntime)
+        {
+            await _deployService.PublishApp(pathToCsproj, appName, (AppRuntimeVersion)appRuntime);
         }
 
         public override Task OnConnectedAsync()
