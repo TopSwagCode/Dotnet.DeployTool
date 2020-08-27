@@ -43,63 +43,71 @@ namespace Dotnet.DeployTool.Core
 
         public async Task UpdateConfigAndTestConnection(string pemFilePath, string ip, int port, string username)
         {
-            await _feedbackChannel.SendFeedback($" - - - - Updating config and checking connection - - - -");
-
-            bool hasError = false;
-
-            var nodeExists = CheckIfNodeExistsWithOpenPort(ip, port);
-
-            if (nodeExists)
-            {
-                await _feedbackChannel.SendFeedback($"Node with Ip: {ip} and Port: {port} found.");
-            }
-            else
-            {
-                await _feedbackChannel.SendFeedback($"Node with Ip: {ip} and Port: {port} not found.");
-                hasError = true;
-            }
-
-            if (File.Exists(pemFilePath))
-            {
-                await _feedbackChannel.SendFeedback($"PemFile found");
-            }
-            else
-            {
-                await _feedbackChannel.SendFeedback($"PemFile not found");
-                hasError = true;
-            }
-
-            if (hasError)
-            {
-                await _feedbackChannel.SendFeedback($" - - - - Failed to make connection - - - -");
-                return;
-            }
-
-            _config.PemKey = new PrivateKeyFile(pemFilePath);
-            _config.Ip = ip;
-            _config.Port = port;
-            _config.Username = username;
-
             try
             {
-                using (var client = _scpClient)
-                {
-                    client.Connect();
+                _config.PemKey = new PrivateKeyFile(pemFilePath);
+                _config.Ip = ip;
+                _config.Port = port;
+                _config.Username = username;
 
-                    if (client.IsConnected)
+                await _feedbackChannel.SendFeedback($" - - - - Updating config and checking connection - - - -");
+
+                bool hasError = false;
+
+                var nodeExists = CheckIfNodeExistsWithOpenPort(ip, port);
+
+                if (nodeExists)
+                {
+                    await _feedbackChannel.SendFeedback($"Node with Ip: {ip} and Port: {port} found.");
+                }
+                else
+                {
+                    await _feedbackChannel.SendFeedback($"Node with Ip: {ip} and Port: {port} not found.");
+                    hasError = true;
+                }
+
+                if (File.Exists(pemFilePath))
+                {
+                    await _feedbackChannel.SendFeedback($"PemFile found");
+                }
+                else
+                {
+                    await _feedbackChannel.SendFeedback($"PemFile not found");
+                    hasError = true;
+                }
+
+                if (hasError)
+                {
+                    await _feedbackChannel.SendFeedback($" - - - - Failed to make connection - - - -");
+                    return;
+                }
+
+                try
+                {
+                    using (var client = _scpClient)
                     {
-                        await _feedbackChannel.SendFeedback($" - - - - Connection Success - - - -");
+                        client.Connect();
+
+                        if (client.IsConnected)
+                        {
+                            await _feedbackChannel.SendFeedback($" - - - - Connection Success - - - -");
+                        }
+                        else
+                        {
+                            await _feedbackChannel.SendFeedback($" - - - - Failed to make connection - - - -");
+                        }
                     }
-                    else
-                    {
-                        await _feedbackChannel.SendFeedback($" - - - - Failed to make connection - - - -");
-                    }
+                }
+                catch (Exception e)
+                {
+                    await _feedbackChannel.SendFeedback($" - - - - Failed to make connection with Exception: {e.Message} - - - -");
                 }
             }
             catch (Exception e)
             {
-                await _feedbackChannel.SendFeedback($" - - - - Failed to make connection with Exception: {e.Message} - - - -");
+                _logger.LogError(e.Message);
             }
+            
 
         }
 
@@ -122,7 +130,7 @@ namespace Dotnet.DeployTool.Core
         public async Task UploadSolution(string pemFilePath, string ip, int port, string username, string projectName)
         {
             
-            var releaseFolderPath = Environment.GetFolderPath(Environment.SpecialFolder.UserProfile) + $"/.deploy/{projectName}";
+            var releaseFolderPath = Environment.GetFolderPath(Environment.SpecialFolder.UserProfile) + $"/dotnetdeploy/{projectName}";
 
             try
             {
@@ -137,8 +145,8 @@ namespace Dotnet.DeployTool.Core
                 {
                     client.Connect();
 
-                    await _feedbackChannel.SendFeedback(await client.RunCommandAsync("mkdir .deploy"));
-                    await _feedbackChannel.SendFeedback(await client.RunCommandAsync($"cd .deploy && mkdir {projectName}"));
+                    await client.RunCommandAsync("mkdir dotnetdeploy");
+                    await client.RunCommandAsync($"cd dotnetdeploy && mkdir {projectName}");
                 }
 
                 using (var client = _scpClient)
@@ -159,7 +167,7 @@ namespace Dotnet.DeployTool.Core
 
                     if (directoryInfo.Exists)
                     {
-                        client.Upload(directoryInfo, $"./.deploy/{projectName}");
+                        client.Upload(directoryInfo, $"/home/{username}/dotnetdeploy/{projectName}/");
                     }
                     else
                     {
@@ -220,8 +228,128 @@ namespace Dotnet.DeployTool.Core
             }
         }
 
-        public async Task RunSampleAppAsync()
+
+        public Task PublishApp(string pathToCsproj, string appName, AppRuntimeVersion appRuntime)
         {
+            _feedbackChannel.SendFeedback($"- - - - Publishing App: {appName} - - - -");
+
+            var isRelease = true; // Hardcoded for now.
+            var configuration = isRelease ? "Release" : "Debug";
+            var framework = appRuntime;
+            var isSelfContained = false;
+            var osRuntime = "linux-x64";
+            var output = Environment.GetFolderPath(Environment.SpecialFolder.UserProfile) + $"/dotnetdeploy/{appName}";
+            var script = $"publish {pathToCsproj} --configuration {configuration} --framework {framework.From()} --self-contained {isSelfContained.ToString().ToLower()} --runtime {osRuntime} --output {output}"; // --verbosity quiet
+
+            _feedbackChannel.SendFeedback($"dotnet ${script}");
+
+            var result = script.Cmd();
+
+            _feedbackChannel.SendFeedback(result);
+
+            _feedbackChannel.SendFeedback($"- - - - Publishing completed for App: {appName} - - - -");
+            return Task.CompletedTask;
+        }
+
+        public async Task SetupService(string pemFilePath, string ip, int port, string username, string projectName, string dllName)
+        {
+            try
+            {
+                _config.PemKey = new PrivateKeyFile(pemFilePath);
+                _config.Ip = ip;
+                _config.Port = port;
+                _config.Username = username;
+
+                await _feedbackChannel.SendFeedback($"- - - - Setup App: {projectName} - - - -");
+
+                await _feedbackChannel.SendFeedback("Creating Service description file");
+
+                var serviceFilePath = Environment.GetFolderPath(Environment.SpecialFolder.UserProfile) + $"/dotnetdeploy/{projectName.ToLower()}.service";
+
+                File.Copy("description.service", serviceFilePath, true);
+
+                string text = File.ReadAllText(serviceFilePath);
+                text = text.Replace("{WorkingDirectory}", $"/home/{username}/dotnetdeploy/{projectName}");
+                text = text.Replace("{WorkingDirectoryDll}", $"/home/{username}/dotnetdeploy/{projectName}/{dllName}");
+                File.WriteAllText(serviceFilePath, text);
+
+                await _feedbackChannel.SendFeedback($"- - - - Setup completed for App: {projectName} - - - -");
+
+                await _feedbackChannel.SendFeedback("Uploading service description file");
+
+
+                using (var client = _scpClient)
+                {
+
+                    client.RemotePathTransformation = RemotePathTransformation.ShellQuote;
+                    client.Connect();
+
+                    client.Uploading += async delegate (object sender, ScpUploadEventArgs e)
+                    {
+                        if (e.Size != 0)
+                        {
+                            await _feedbackChannel.SendFeedback($"Uploading {e.Filename} {e.Uploaded} Bytes Uploaded of {e.Size}, which is: {Convert.ToInt32((e.Uploaded * 100) / e.Size)}%");
+                        }
+                    };
+
+                    var fileInfo = new FileInfo(serviceFilePath);
+
+                    if (fileInfo.Exists)
+                    {
+                        client.Upload(fileInfo, $"/home/{username}/dotnetdeploy/{projectName.ToLower()}.service");
+                    }
+                    else
+                    {
+                        await _feedbackChannel.SendFeedback($"- - - - Failed uploading file: {serviceFilePath}, with error: File not found - - - - ");
+                    }
+                }
+
+                using (var client = _sshClient)
+                {
+                    client.Connect();
+
+                    var scriptLines = new List<string>
+                    {
+                        $"sudo mv /home/{username}/dotnetdeploy/{projectName.ToLower()}.service /etc/systemd/system/{projectName.ToLower()}.service",
+                        $"sudo systemctl enable {projectName.ToLower()}.service",
+                        $"sudo systemctl start {projectName.ToLower()}.service",
+                        $"sudo iptables -A PREROUTING -t nat -i eth0 -p tcp --dport 80 -j REDIRECT --to-port 5000" // Hardcoded for now. Should be an option for your app.
+                    };
+
+                    string totalResults = string.Empty;
+
+                    foreach (var scriptLine in scriptLines)
+                    {
+                        await _feedbackChannel.SendFeedback($"$ {scriptLine}");
+
+                        var output = await client.RunCommandAsync(scriptLine);
+
+                        await _feedbackChannel.SendFeedback(output);
+                    }
+                }
+
+                // SSH /etc/systemd/system/{projectName.ToLower()}.service
+            }
+            catch (Exception e)
+            {
+                await _feedbackChannel.SendFeedback($"- - - - Failed Setup Service, with error: {e.Message} - - - - ");
+                _logger.LogError(e.Message);
+            }
+            
+            /*
+             *  TODO:
+             *  Setup Service
+             *  Start Service
+             */
+        }
+
+        public async Task RunSample(string pemFilePath, string ip, int port, string username, string projectName, string dllName)
+        {
+            _config.PemKey = new PrivateKeyFile(pemFilePath);
+            _config.Ip = ip;
+            _config.Port = port;
+            _config.Username = username;
+
             Console.WriteLine(" - - - - Starting Sample App - - - -");
             try
             {
@@ -231,7 +359,7 @@ namespace Dotnet.DeployTool.Core
 
                     var scriptLines = new List<string>
                     {
-                        "sudo dotnet publish/SampleApp.dll"
+                        $"sudo dotnet /home/{username}/dotnetdeploy/{projectName}/{dllName}"
                     };
 
                     string totalResults = string.Empty;
@@ -252,46 +380,6 @@ namespace Dotnet.DeployTool.Core
                 await _feedbackChannel.SendFeedback($"Failed running app, with error: {e.Message}");
                 _logger.LogWarning(e.Message);
             }
-        }
-
-        public Task PublishApp(string pathToCsproj, string appName, AppRuntimeVersion appRuntime)
-        {
-            _feedbackChannel.SendFeedback($"- - - - Publishing App: {appName} - - - -");
-
-            var isRelease = true; // Hardcoded for now.
-            var configuration = isRelease ? "Release" : "Debug";
-            var framework = appRuntime;
-            var isSelfContained = false;
-            var osRuntime = "linux-x64";
-            var output = Environment.GetFolderPath(Environment.SpecialFolder.UserProfile) + $"/.deploy/{appName}";
-            var script = $"publish {pathToCsproj} --configuration {configuration} --framework {framework.From()} --self-contained {isSelfContained.ToString().ToLower()} --runtime {osRuntime} --output {output}"; // --verbosity quiet
-
-            _feedbackChannel.SendFeedback($"dotnet ${script}");
-
-            var result = script.Cmd();
-
-            _feedbackChannel.SendFeedback(result);
-
-            _feedbackChannel.SendFeedback($"- - - - Publishing completed for App: {appName} - - - -");
-            return Task.CompletedTask;
-        }
-
-        public Task SetupService(string pemFilePath, string ip, int port, string username, string projectName)
-        {
-
-            var serviceFilePath = Environment.GetFolderPath(Environment.SpecialFolder.UserProfile) + $"/.deploy/{projectName}/{projectName.ToLower()}.service";
-
-            File.Copy("description.service", serviceFilePath);
-
-            /*
-             * TODO:
-             *  Change variables in service file
-             *  Upload it to Server
-             *  Setup Service
-             *  Start Service
-             */
-
-            throw new NotImplementedException();
         }
     }
 

@@ -25,5 +25,7 @@
         public const string PublishApp = "PublishApp";
 
         public static string SetupService = "SetupService";
+
+        public static string RunSample = "RunSample";
     }
 }

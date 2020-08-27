@@ -67,18 +67,16 @@
                 </p>
                 <p>
                     <MatButton Raised="true" @onclick="PublishApp">Publish</MatButton>
-                    <MatButton Raised="true" @onclick="UploadSolution">Upload solution and test connection</MatButton>
+                    <MatButton Raised="true" @onclick="UploadSolution">Upload solution</MatButton>
                 </p>
             </MatTab>
             <MatTab Label="Run">
                 <p>
-                    <MatTextField @bind-Value="@_pemKeyFilePath" Label="Locale release filepath" Style="width: 800px"></MatTextField>
+                    <MatTextField @bind-Value="@_dllName" Label="Locale release filepath" Style="width: 800px"></MatTextField>
                 </p>
                 <p>
-                    <MatTextField @bind-Value="@_pemKeyFilePath" Label="Remote upload filepath" Style="width: 800px"></MatTextField>
-                </p>
-                <p>
-                    <MatButton Raised="true" @onclick="TestConnectionAsync">Setup Service</MatButton>
+                    <MatButton Raised="true" @onclick="RunSample">Test Run</MatButton>
+                    <MatButton Raised="true" @onclick="SetupService">Setup Service</MatButton>
                 </p>
             </MatTab>
 
@@ -93,7 +91,7 @@
 
     DeployClient client = null;
 
-    string _ip = "54.155.2.29"; // TODO: Remove hardcoded value
+    string _ip = "34.241.172.86"; // TODO: Remove hardcoded value
     int _port = 22;
     string _username = "ubuntu";
     string _pemKeyFilePath = @"C:\deploytool\default.pem";
@@ -104,6 +102,8 @@
 
     string _csprojFilePath = @"C:\git\TopSwagCode.Blog.Api\Blog.Api\Blog.Api.csproj";
     string _projectName = @"BlogApi";
+
+    string _dllName = @"Blog.Api.dll";
 
     // list of messages in chat
     List<string> feedbackList = new List<string>();
@@ -175,7 +175,12 @@
 
     private async Task SetupService()
     {
-        await client.SetupService(_pemKeyFilePath, _ip, _port, _username, _projectName);
+        await client.SetupService(_pemKeyFilePath, _ip, _port, _username, _projectName, _dllName);
+    }
+
+    private async Task RunSample()
+    {
+        await client.RunSample(_pemKeyFilePath, _ip, _port, _username, _projectName, _dllName);
     }
 
 }

@@ -100,9 +100,14 @@ namespace Dotnet.DeployTool.UI.Shared.Deploy
             await _hubConnection.SendAsync(DeployMessageTypes.UploadSolution, pemFilePath, ip, port, username, projectName);
         }
 
-        public async Task SetupService(string pemFilePath, string ip, int port, string username, string projectName)
+        public async Task SetupService(string pemFilePath, string ip, int port, string username, string projectName, string dllName)
         {
-            await _hubConnection.SendAsync(DeployMessageTypes.SetupService, pemFilePath, ip, port, username, projectName);
+            await _hubConnection.SendAsync(DeployMessageTypes.SetupService, pemFilePath, ip, port, username, projectName, dllName);
+        }
+
+        public async Task RunSample(string pemFilePath, string ip, int port, string username, string projectName, string dllName)
+        {
+            await _hubConnection.SendAsync(DeployMessageTypes.RunSample, pemFilePath, ip, port, username, projectName, dllName);
         }
 
         public async Task StopAsync()
